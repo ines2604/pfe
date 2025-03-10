@@ -2,47 +2,64 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\CanResetPassword;
+use MongoDB\Laravel\Eloquent\Model as Eloquent;
 
-class User extends Authenticatable
+class User extends Eloquent implements Authenticatable, CanResetPassword
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use \Illuminate\Auth\Authenticatable, \Illuminate\Auth\Passwords\CanResetPassword;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $connection = 'mongodb'; 
+    protected $collection = 'users'; 
+
     protected $fillable = [
-        'name',
+        'nom',
+        'prenom',
         'email',
+        'tel',
+        'naissance',
         'password',
+        'pays',
+        'api_token',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+    // les champs masquées dans les réponses JSON
     protected $hidden = [
         'password',
-        'remember_token',
+        'api_token', 
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    // Remplace remember_token par api_token
+    public function getRememberToken()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->api_token;
+    }
+
+    public function setRememberToken($value)
+    {
+        $this->api_token = $value;
+    }
+
+    public function getRememberTokenName()
+    {
+        return 'api_token';
+    }
+    public function generateToken()
+    {
+        $this->api_token = \Illuminate\Support\Str::random(60);
+        $this->save();
+        return $this->api_token;
+    }
+
+    // Supprimer le token (logout)
+    public function removeToken()
+    {
+        $this->api_token = null;
+        $this->save();
     }
 }

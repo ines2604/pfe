@@ -8,8 +8,8 @@
     "devDependencies": {
         "@popperjs/core": "^2.11.6",
         "autoprefixer": "^10.4.20",
-        "axios": "^1.7.4",
-        "bootstrap": "^5.2.3",
+        "axios": "^1.7.9",
+        "bootstrap": "^5.3.3",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.2.0",
         "postcss": "^8.5.3",
@@ -19,11 +19,20 @@
     },
     "dependencies": {
         "@vitejs/plugin-vue": "^5.2.1",
+        "@vueuse/head": "^2.0.0",
+        "bootstrap-vue": "^2.23.1",
+        "country-select-js": "^2.1.0",
         "esbuild": "^0.25.0",
+        "intl-tel-input": "^25.3.0",
+        "libphonenumber-js": "^1.12.4",
+        "lodash": "^4.17.21",
         "nth-check": "^2.1.1",
         "serialize-javascript": "^6.0.2",
+        "sweetalert2": "^11.17.2",
         "vue": "^3.5.13",
         "vue-loader": "^17.4.2",
-        "vue-router": "^4.5.0"
+        "vue-meta": "^2.4.0",
+        "vue-router": "^4.5.0",
+        "vuestic-ui": "^1.10.3"
     }
 }
