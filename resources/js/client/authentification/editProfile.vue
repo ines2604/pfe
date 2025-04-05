@@ -53,19 +53,23 @@
                             class="form-control"
                             id="email"
                             v-model="user.email"
-                            :class="{'error-border': errors.email}"
+                            readonly
+                            disabled
                             aria-label="Adresse e-mail"
-                            :aria-describedby="errors.email ? 'email-error' : null"
-                            @keyup.enter="updateProfile"
+                            :aria-describedby="email-description"
                         >
                     </div>
-                    <p class="error-message" v-if="errors.email" id="email-error" aria-live="assertive">{{ errors.email }}</p>
+                    <p id="email-description" class="text-muted small">L'adresse email ne peut pas être modifiée</p>
                 </div>
 
                 <div class="form-group">
                     <label for="tel" class="sr-only">Numéro de téléphone</label>
                     <div class="input-with-icon">
-                        <i class="fas fa-phone" aria-hidden="true"></i>
+                        <div v-if="user.selectedCountry" class="country-code-display">
+                            <img :src="user.selectedCountry.flagUrl" alt="Drapeau" class="country-flag">
+                            {{ user.selectedCountry.idd.root }}{{ user.selectedCountry.idd.suffixes?.[0] || '' }}
+                        </div>
+                        <i v-else class="fas fa-phone" aria-hidden="true"></i>
                         <input
                             type="tel"
                             class="form-control"
@@ -104,7 +108,8 @@
                         <div class="form-group">
                             <label for="pays" class="sr-only">Pays</label>
                             <div class="input-with-icon">
-                                <i class="fas fa-globe" aria-hidden="true"></i>
+                                <img v-if="user.selectedCountry" :src="user.selectedCountry.flagUrl" alt="Drapeau" class="country-flag">
+                                <i v-else class="fas fa-globe" aria-hidden="true"></i>
                                 <select
                                     class="form-control"
                                     id="pays"
@@ -113,10 +118,11 @@
                                     aria-label="Pays"
                                     :aria-describedby="errors.pays ? 'pays-error' : null"
                                     @keyup.enter="updateProfile"
+                                    @change="updateCountryCode"
                                 >
-                                    <option v-for="country in countries" :key="country" :value="country">
-                                        {{ country }}
-                                    </option>
+                                <option v-for="country in countries" :key="country.cca2" :value="country">
+                                    {{ country.flag }} {{ country.name.common }}
+                                </option>
                                 </select>
                             </div>
                             <p class="error-message" v-if="errors.pays" id="pays-error" aria-live="assertive">{{ errors.pays }}</p>
@@ -141,7 +147,7 @@
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { useMeta } from 'vue-meta';
+import countries from 'world-countries';
 
 export default {
     name: 'editProfile',
@@ -161,31 +167,39 @@ export default {
                 email: '',
                 tel: '',
                 naissance: '',
-                selectedCountry: ''
+                selectedCountry: null,
             },
             originalUser: {},
-            countries: [
-                "Afghanistan", "Albanie", "Algérie", "Andorre", "Angola", "Argentine", "Arménie", "Australie", "Autriche",
-                "Azerbaïdjan", "Bahamas", "Bahreïn", "Bangladesh", "Belgique", "Bénin", "Bhoutan", "Bolivie", "Brésil",
-                "Bulgarie", "Burkina Faso", "Burundi", "Cameroun", "Canada", "Chili", "Chine", "Colombie", "Comores",
-                "Costa Rica", "Croatie", "Cuba", "Danemark", "Djibouti", "Égypte", "Émirats arabes unis", "Équateur",
-                "Espagne", "Estonie", "États-Unis", "Éthiopie", "Finlande", "France", "Gabon", "Gambie", "Géorgie", "Ghana",
-                "Grèce", "Guatemala", "Guinée", "Haïti", "Honduras", "Hongrie", "Inde", "Indonésie", "Irak", "Iran", "Irlande",
-                "Islande", "Italie", "Japon", "Jordanie", "Kazakhstan", "Kenya", "Liban", "Libye", "Madagascar", "Malaisie",
-                "Maroc", "Mauritanie", "Mexique", "Monaco", "Mongolie", "Mozambique", "Namibie", "Népal", "Niger", "Nigéria",
-                "Norvège", "Nouvelle-Zélande", "Oman", "Pakistan", "Palestine", "Panama", "Paraguay", "Pays-Bas", "Pérou",
-                "Philippines", "Pologne", "Portugal", "Qatar", "République tchèque", "Roumanie", "Royaume-Uni", "Russie",
-                "Sénégal", "Serbie", "Singapour", "Slovaquie", "Slovénie", "Somalie", "Soudan", "Suède", "Suisse", "Syrie",
-                "Tchad", "Thaïlande", "Tunisie", "Turquie", "Ukraine", "Uruguay", "Venezuela", "Vietnam", "Yémen", "Zambie"
-            ],
+                countries: countries.map(country => ({
+                ...country,
+                flag: this.getFlagEmoji(country.cca2),
+                flagUrl: `https://flagcdn.com/w40/${country.cca2.toLowerCase()}.png`,
+            })),
             errors: {},
             loading: false
         };
     },
     async mounted(){
         await this.fetchUserData();
+
     },
     methods: {
+        getFlagEmoji(countryCode) {
+            return String.fromCodePoint(...Array.from(countryCode.toUpperCase()).map(char => 127397 + char.charCodeAt()));
+        },
+        updateCountryCode() {
+            this.user.tel = ''; 
+        },
+        cleanPhoneNumber(phoneNumber, countryCode) {
+            if (phoneNumber.startsWith(countryCode)) {
+                return phoneNumber.slice(countryCode.length).trim();
+            }
+            return phoneNumber;
+        },
+        formatDate(dateString) {
+            const datePart = dateString.split('T')[0];
+            return datePart;  
+        },
         async fetchUserData() {
             try {
                 const token = localStorage.getItem('token');
@@ -200,13 +214,23 @@ export default {
                     },
                 });
 
+                const selectedCountry = this.countries.find(
+                    country => country.name.common === response.data.pays
+                );
+
+                let tel= response.data.tel;
+                if (selectedCountry) {
+                    const countryCode = `${selectedCountry.idd.root}${selectedCountry.idd.suffixes[0]}`;
+                    tel = this.cleanPhoneNumber(response.data.tel, countryCode);
+                }
+
                 this.originalUser = {
                     nom: response.data.nom,
                     prenom: response.data.prenom,
                     email: response.data.email,
-                    tel: response.data.tel,
-                    naissance: response.data.naissance,
-                    selectedCountry: response.data.pays,
+                    tel: tel,
+                    naissance: this.formatDate(response.data.naissance),
+                    selectedCountry: selectedCountry,
                 };
                 this.user= { ...this.originalUser };
             } catch (error) {
@@ -237,13 +261,6 @@ export default {
                 this.errors.prenom = "Le prénom ne doit contenir que des lettres, des espaces, des tirets et des caractères accentués.";
             } else if (this.user.prenom.length < 2) {
                 this.errors.prenom = "Le prénom doit contenir au moins 2 caractères.";
-            }
-
-            // Validation de l'email
-            if (!this.user.email) {
-                this.errors.email = "L'adresse e-mail est obligatoire.";
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.user.email)) {
-                this.errors.email = "L'adresse e-mail est invalide.";
             }
 
             // Validation du téléphone
@@ -282,10 +299,9 @@ export default {
                     const payload = {
                         nom: this.user.nom,
                         prenom: this.user.prenom,
-                        email: this.user.email,
-                        tel: this.user.tel,
+                        tel: `${this.user.selectedCountry.idd.root}${this.user.selectedCountry.idd.suffixes[0]} ${this.user.tel}`,
                         naissance: this.user.naissance,
-                        pays: this.user.selectedCountry,
+                        pays: this.user.selectedCountry.name.common,
                     };
                     const token = localStorage.getItem('token');
                     const response = await axios.patch(
@@ -362,6 +378,12 @@ h1 {
     left: 10px;
     color: #555;
     z-index: 1;
+}
+
+.input-with-icon input:disabled {
+    background-color: #f8f9fa;
+    opacity: 1;
+    cursor: not-allowed;
 }
 
 .input-with-icon input,
@@ -451,5 +473,19 @@ h1 {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+.country-code-display {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.country-flag {
+    width: 25px;
+    height: 18px;
+    margin-right: 8px;
+    border-radius: 2px;
 }
 </style>

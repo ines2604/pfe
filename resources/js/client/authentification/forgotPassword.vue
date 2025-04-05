@@ -127,7 +127,7 @@ export default {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background-image: url('../images/forgotpassbg.jpg'); 
+    background-image: url('C:\laravel\pfe\resources\images\forgotpassbg.jpg'); 
     background-size: cover;
     background-position: center;
     animation: backgroundAnimation 20s infinite alternate;

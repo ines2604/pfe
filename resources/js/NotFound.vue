@@ -3,16 +3,25 @@
         <h1 class="display-1 fw-bold text-primary" aria-label="Erreur 404">404</h1>
         <p class="fs-4 text-muted" aria-label="Oups ! Page non trouvée.">Oups ! Page non trouvée.</p>
         <p class="text-secondary" aria-label="La page que vous cherchez n'existe pas.">La page que vous cherchez n'existe pas.</p>
-        <router-link to="/" class="btn btn-primary mt-3" aria-label="Retour à l'accueil">
-            Retour à l'accueil
-        </router-link>
+        <button @click="goBack" class="btn btn-primary mt-3" aria-label="Retour à la page précédente">
+            Retour à la page précédente
+        </button>
     </div>
 </template>
 
 <script>
-export default{
-    name: 'notFound',
-    metaInfo:{
+export default {
+    name: 'NotFound',
+    methods: {
+        goBack() {
+            if (window.history.length > 1) {
+                this.$router.go(-1);
+            } else {
+                this.$router.push('/');
+            }
+        }
+    },
+    metaInfo: {
         title: 'Page non trouvée - Alliance Hospitality',
         meta: [
             { name: 'description', content: 'La page que vous cherchez n\'existe pas. Retournez à l\'accueil pour continuer votre navigation.' },
@@ -24,17 +33,25 @@ export default{
 
 <style scoped>
 h1 {
-    text-shadow: 3px 3px 10px #007bff;
+    text-shadow: 3px 3px 10px rgba(0, 123, 255, 0.5);
+    animation: pulse 2s infinite;
 }
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 .btn-primary {
-    padding: 10px;
-    background: linear-gradient(135deg, #007bff, #00bfff); 
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #007bff, #00bfff);
     border: none;
     border-radius: 8px;
     color: white;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 .btn-primary:hover {

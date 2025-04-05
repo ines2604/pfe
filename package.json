@@ -20,9 +20,11 @@
     "dependencies": {
         "@vitejs/plugin-vue": "^5.2.1",
         "@vueuse/head": "^2.0.0",
+        "aos": "^2.3.4",
         "bootstrap-vue": "^2.23.1",
         "country-select-js": "^2.1.0",
         "esbuild": "^0.25.0",
+        "flatpickr": "^4.6.13",
         "intl-tel-input": "^25.3.0",
         "libphonenumber-js": "^1.12.4",
         "lodash": "^4.17.21",
@@ -30,9 +32,11 @@
         "serialize-javascript": "^6.0.2",
         "sweetalert2": "^11.17.2",
         "vue": "^3.5.13",
+        "vue-flatpickr-component": "^11.0.5",
         "vue-loader": "^17.4.2",
         "vue-meta": "^2.4.0",
         "vue-router": "^4.5.0",
-        "vuestic-ui": "^1.10.3"
+        "vuestic-ui": "^1.10.3",
+        "world-countries": "^5.1.0"
     }
 }

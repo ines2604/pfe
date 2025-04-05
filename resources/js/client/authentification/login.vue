@@ -145,7 +145,7 @@ export default {
     align-items: center;
     justify-content: center;
     height: 100vh;
-    background-image: url('../images/loginbg.jpg');
+    background-image: url('C:\laravel\pfe\resources\images\loginbg.jpg');
     background-size: cover;
     background-position: center;
     animation: backgroundAnimation 20s infinite alternate;
